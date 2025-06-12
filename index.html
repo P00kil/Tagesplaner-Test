@@ -2,25 +2,24 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Tagesplan RWG</title>
+  <title>Tagesplan</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 2rem; }
-    select { font-size: 1rem; margin-bottom: 1rem; }
-    table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+    body { font-family: sans-serif; margin: 2rem; }
+    select { font-size: 1rem; }
+    table { border-collapse: collapse; margin-top: 1rem; width: 100%; }
     th, td { border: 1px solid #ccc; padding: 0.5rem; text-align: left; }
-    th { background-color: #f2f2f2; }
+    th { background-color: #f0f0f0; }
   </style>
 </head>
 <body>
 
-<h1>RWG Tagesplan</h1>
+<h1>Tagesplan</h1>
 
-<label for="klasse">Klasse wählen:</label>
+<label for="klasse">Klasse:</label>
 <select id="klasse">
-  <option value="11A" selected>11A</option>
-  <option value="10A">10A</option>
-  <option value="9A">9A</option>
-  <!-- Weitere Klassen nach Bedarf -->
+  <option value="11A">11A</option>
+  <option value="10B">10B</option>
+  <option value="9C">9C</option>
 </select>
 
 <table id="plan">
@@ -38,59 +37,53 @@
 </table>
 
 <script>
-const XML_URL = 'https://www.rwg-waren.de/stundenplan/vplan/mobdaten/Klassen.xml';
+  document.getElementById('klasse').addEventListener('change', ladePlan);
+  window.addEventListener('load', ladePlan);
 
-document.getElementById('klasse').addEventListener('change', ladePlan);
-window.addEventListener('load', ladePlan);
+  function ladePlan() {
+    const klasse = document.getElementById('klasse').value;
+    fetch('Klassen-2.xml')
+      .then(res => res.text())
+      .then(str => (new window.DOMParser()).parseFromString(str, "text/xml"))
+      .then(data => {
+        const klassen = data.getElementsByTagName("Kl");
+        let stunden = [];
 
-function ladePlan() {
-  const klasse = document.getElementById('klasse').value;
-  fetch(XML_URL)
-    .then(res => res.text())
-    .then(xmlString => new window.DOMParser().parseFromString(xmlString, "text/xml"))
-    .then(xml => {
-      const klassen = xml.getElementsByTagName("Kl");
-      let stunden = [];
-
-      for (let kl of klassen) {
-        const kurz = kl.getElementsByTagName("Kurz")[0]?.textContent?.trim();
-        if (kurz === klasse) {
-          const stds = kl.getElementsByTagName("Std");
-          for (let std of stds) {
-            stunden.push({
-              st: std.getElementsByTagName("St")[0]?.textContent ?? "",
-              beginn: std.getElementsByTagName("Beginn")[0]?.textContent ?? "",
-              ende: std.getElementsByTagName("Ende")[0]?.textContent ?? "",
-              fach: std.getElementsByTagName("Fa")[0]?.textContent ?? "",
-              lehrer: std.getElementsByTagName("Le")[0]?.textContent ?? "",
-              raum: std.getElementsByTagName("Ra")[0]?.textContent ?? "",
-              info: std.getElementsByTagName("If")[0]?.textContent ?? ""
-            });
+        for (let kl of klassen) {
+          const kurz = kl.getElementsByTagName("Kurz")[0].textContent.trim();
+          if (kurz === klasse) {
+            const stds = kl.getElementsByTagName("Std");
+            for (let std of stds) {
+              stunden.push({
+                stunde: std.getElementsByTagName("St")[0]?.textContent ?? "",
+                beginn: std.getElementsByTagName("Beginn")[0]?.textContent ?? "",
+                ende: std.getElementsByTagName("Ende")[0]?.textContent ?? "",
+                fach: std.getElementsByTagName("Fa")[0]?.textContent ?? "",
+                lehrer: std.getElementsByTagName("Le")[0]?.textContent ?? "",
+                raum: std.getElementsByTagName("Ra")[0]?.textContent ?? "",
+                info: std.getElementsByTagName("If")[0]?.textContent ?? ""
+              });
+            }
+            break;
           }
-          break;
         }
-      }
 
-      stunden.sort((a, b) => Number(a.st) - Number(b.st));
-      const tbody = document.querySelector("#plan tbody");
-      tbody.innerHTML = "";
-      for (let s of stunden) {
-        tbody.innerHTML += `
-          <tr>
-            <td>${s.st}</td>
-            <td>${s.beginn}–${s.ende}</td>
-            <td>${s.fach}</td>
-            <td>${s.lehrer}</td>
-            <td>${s.raum}</td>
-            <td>${s.info}</td>
-          </tr>`;
-      }
-    })
-    .catch(err => {
-      console.error('Fehler beim Laden:', err);
-      alert('Plan konnte nicht geladen werden.');
-    });
-}
+        stunden.sort((a, b) => Number(a.stunde) - Number(b.stunde));
+        const tbody = document.querySelector("#plan tbody");
+        tbody.innerHTML = "";
+        for (let s of stunden) {
+          tbody.innerHTML += `
+            <tr>
+              <td>${s.stunde}</td>
+              <td>${s.beginn}-${s.ende}</td>
+              <td>${s.fach}</td>
+              <td>${s.lehrer}</td>
+              <td>${s.raum}</td>
+              <td>${s.info}</td>
+            </tr>`;
+        }
+      });
+  }
 </script>
 
 </body>
